@@ -1,15 +1,19 @@
 package net.tfminecraft.DenarEconomy.Managers;
 
+import java.util.List;
+
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import me.Plugins.SimpleFactions.Managers.FactionManager;
 import me.Plugins.SimpleFactions.Objects.Faction;
 import me.Plugins.TLibs.Objects.API.SubAPI.StringFormatter;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
+import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
 
 public class CommandManager implements CommandExecutor{
@@ -33,6 +37,29 @@ public class CommandManager implements CommandExecutor{
 				}
 				double amount = Double.parseDouble(args[1]);
 				DenarEconomy.getMoneyManager().pay(p, amount);
+				return true;
+			} else if(args[0].equalsIgnoreCase("toitem")) {
+				if(args.length < 2) {
+					p.sendMessage("§a[DenarEconomy] §cNo amount specified");
+					return false;
+				}
+				double amount = Double.parseDouble(args[1]);
+				Account pouch = DenarEconomy.getPlayerManager().get(p).getPouch();
+				if(pouch.getBal() < amount) {
+					p.sendMessage(StringFormatter.formatHex("#a33d1dNot enough funds in pouch"));
+					return false;
+				}
+				pouch.change(amount*-1);
+				List<ItemStack> items = DenarEconomy.getMoneyManager().amountToItems(amount);
+
+				for(ItemStack i : items){
+					if(p.getInventory().firstEmpty() == -1){
+						p.getWorld().dropItem(p.getLocation(), i);
+					} else{
+						p.getInventory().addItem(i);
+					}
+				}
+				
 				return true;
 			} else if(args[0].equalsIgnoreCase("deposit")) {
 				if(FactionManager.getByMember(p.getName()) == null) {
