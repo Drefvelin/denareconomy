@@ -2,8 +2,11 @@ package net.tfminecraft.DenarEconomy;
 
 import java.io.File;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.tfminecraft.DenarEconomy.Database.Database;
 import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
 import net.tfminecraft.DenarEconomy.Managers.CommandManager;
 import net.tfminecraft.DenarEconomy.Managers.MoneyManager;
@@ -29,6 +32,13 @@ public class DenarEconomy extends JavaPlugin {
 		registerListeners();
 		getCommand(commands.cmd1).setExecutor(commands);
 		playerManager.start();
+	}
+
+	@Override
+	public void onDisable(){
+		for(Player p : Bukkit.getOnlinePlayers()){
+			Database.savePlayerData(playerManager.get(p));
+		}
 	}
 	
 	public void loadConfigs() {

@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.bukkit.entity.Player;
 
 public class PlayerData {
-	private Player p;
+	private transient Player p;
 	private UUID id;
 	private Account pouch;
 	private Account bank;
@@ -15,6 +15,14 @@ public class PlayerData {
 		this.id = p.getUniqueId();
 		this.pouch = new Account(0);
 		this.bank = new Account(0, false);
+	}
+
+	public void setPlayer(Player p){
+		this.p = p;
+	}
+
+	public UUID getId(){
+		return id;
 	}
 
 	public Player getPlayer() {
