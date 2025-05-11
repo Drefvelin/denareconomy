@@ -1,4 +1,4 @@
-package net.tfminecraft.denareconomy.loaders;
+package net.tfminecraft.DenarEconomy.Loaders;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import net.tfminecraft.denareconomy.item.Coin;
+import net.tfminecraft.DenarEconomy.Item.Coin;
 
 public class CoinLoader {
 	public static List<Coin> coins = new ArrayList<Coin>();

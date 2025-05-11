@@ -1,4 +1,4 @@
-package net.tfminecraft.denareconomy.managers;
+package net.tfminecraft.DenarEconomy.Managers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,11 +31,11 @@ import me.Plugins.TLibs.Enums.APIType;
 import me.Plugins.TLibs.Objects.API.ItemAPI;
 import me.Plugins.TLibs.Objects.API.SubAPI.StringFormatter;
 import net.Indyuce.mmoitems.MMOItems;
-import net.tfminecraft.denareconomy.DenarEconomy;
-import net.tfminecraft.denareconomy.data.Account;
-import net.tfminecraft.denareconomy.data.PlayerData;
-import net.tfminecraft.denareconomy.item.Coin;
-import net.tfminecraft.denareconomy.loaders.CoinLoader;
+import net.tfminecraft.DenarEconomy.DenarEconomy;
+import net.tfminecraft.DenarEconomy.Data.Account;
+import net.tfminecraft.DenarEconomy.Data.PlayerData;
+import net.tfminecraft.DenarEconomy.Item.Coin;
+import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
 
 public class MoneyManager implements Listener{
 	private PlayerManager pm = DenarEconomy.getPlayerManager();
@@ -58,10 +58,10 @@ public class MoneyManager implements Listener{
 		to.change(amount);
 	}
 	
-	public double doTaxes(Player p, double amount) {
+	public double doTaxes(String p, double amount) {
 		double paidTax = 0;
-		if(FactionManager.getByMember(p.getName()) != null) {
-			Faction f = FactionManager.getByMember(p.getName());
+		if(FactionManager.getByMember(p) != null) {
+			Faction f = FactionManager.getByMember(p);
 			if(f.getTaxRate() > 0) {
 				if(f.getBank() != null) {
 					double tax = f.getTaxRate()/100.0*amount;
@@ -85,23 +85,42 @@ public class MoneyManager implements Listener{
 	
 	public void addMoney(Player p, double amount, boolean silent, boolean taxable) {
 		PlayerData pd = pm.get(p);
-		
+		addMoneyToAccount(p.getUniqueId().toString(), amount, silent, taxable, pd.getPouch());
+	}
+
+	public void addMoneyToBank(String id, double amount, boolean silent, boolean taxable) {
+		PlayerData pd = pm.get(Bukkit.getPlayer(UUID.fromString(id)));
+		addMoneyToAccount(id, amount, silent, taxable, pd.getBank());
+	}
+
+	public void addMoneyToAccount(String id, double amount, boolean silent, boolean taxable, Account a) {
+		if(id == null){
+			System.out.println("Error null ID");
+			return;
+		}
+		Player p = Bukkit.getPlayer(UUID.fromString(id));
+		String name = " ";
+		if(p != null && p.isOnline()){
+			name = p.getName();
+		} else {
+			name = Bukkit.getOfflinePlayer(UUID.fromString(id)).getName();
+		}
 		double tax = 0.0;
 		if(taxable) {
-			tax = doTaxes(p, amount);
+			tax = doTaxes(name, amount);
 			if(tax > 0) {
 				amount -= tax;
 			}
 			amount = Math.round(amount*100.0)/100.0;
 		}
 		
-		if(!silent) {
+		if(!silent && p != null) {
 			p.sendMessage(StringFormatter.formatHex("#dbaf1d+#b39122"+amount+"#dbaf1dd"));
 			if(tax > 0) p.sendMessage(StringFormatter.formatHex("#44524f("+tax+" in tax)"));
 		}
 		
 		if(amount <= 0) return;
-		pd.getPouch().change(amount);
+		a.change(amount);
 	}
 	
 	public List<ItemStack> amountToItems(double amount) {

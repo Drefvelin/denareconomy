@@ -1,4 +1,4 @@
-package net.tfminecraft.denareconomy.item;
+package net.tfminecraft.DenarEconomy.Item;
 
 import org.bukkit.configuration.ConfigurationSection;
 

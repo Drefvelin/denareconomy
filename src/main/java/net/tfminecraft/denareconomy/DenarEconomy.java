@@ -1,13 +1,13 @@
-package net.tfminecraft.denareconomy;
+package net.tfminecraft.DenarEconomy;
 
 import java.io.File;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.tfminecraft.denareconomy.loaders.CoinLoader;
-import net.tfminecraft.denareconomy.managers.CommandManager;
-import net.tfminecraft.denareconomy.managers.MoneyManager;
-import net.tfminecraft.denareconomy.managers.PlayerManager;
+import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
+import net.tfminecraft.DenarEconomy.Managers.CommandManager;
+import net.tfminecraft.DenarEconomy.Managers.MoneyManager;
+import net.tfminecraft.DenarEconomy.Managers.PlayerManager;
 
 public class DenarEconomy extends JavaPlugin {
 	

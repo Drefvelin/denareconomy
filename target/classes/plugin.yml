@@ -1,7 +1,7 @@
-main: net.tfminecraft.denareconomy.DenarEconomy
+main: net.tfminecraft.DenarEconomy.DenarEconomy
 api-version: 1.20
 name: DenarEconomy
-version: ${project.version}
+version: 0.1.1
 author: Drefvelin
 
 depend: [MMOCore, MMOItems, MythicLib]

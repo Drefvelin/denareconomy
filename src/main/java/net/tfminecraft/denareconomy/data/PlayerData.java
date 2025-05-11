@@ -1,4 +1,4 @@
-package net.tfminecraft.denareconomy.data;
+package net.tfminecraft.DenarEconomy.Data;
 
 import java.util.UUID;
 

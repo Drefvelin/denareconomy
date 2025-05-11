@@ -1,4 +1,4 @@
-package net.tfminecraft.denareconomy.managers;
+package net.tfminecraft.DenarEconomy.Managers;
 
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
@@ -9,8 +9,8 @@ import org.bukkit.entity.Player;
 import me.Plugins.SimpleFactions.Managers.FactionManager;
 import me.Plugins.SimpleFactions.Objects.Faction;
 import me.Plugins.TLibs.Objects.API.SubAPI.StringFormatter;
-import net.tfminecraft.denareconomy.DenarEconomy;
-import net.tfminecraft.denareconomy.data.PlayerData;
+import net.tfminecraft.DenarEconomy.DenarEconomy;
+import net.tfminecraft.DenarEconomy.Data.PlayerData;
 
 public class CommandManager implements CommandExecutor{
 	
