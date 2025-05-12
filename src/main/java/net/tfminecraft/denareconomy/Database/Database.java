@@ -8,8 +8,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.UUID;
 
-import org.bukkit.entity.Player;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -22,7 +20,7 @@ public class Database {
     public static void savePlayerData(PlayerData data) {
         if (!dataDir.exists()) dataDir.mkdirs();
 
-        File file = new File(dataDir, data.getPlayer().getUniqueId().toString() + ".json");
+        File file = new File(dataDir, data.getId().toString() + ".json");
         try (Writer writer = new FileWriter(file)) {
             gson.toJson(data, writer);
         } catch (IOException e) {
@@ -30,15 +28,14 @@ public class Database {
         }
     }
 
-    public static PlayerData loadPlayerData(Player player) {
-        File file = new File(dataDir, player.getUniqueId().toString() + ".json");
+    public static PlayerData loadPlayerData(UUID player) {
+        File file = new File(dataDir, player.toString() + ".json");
         if (!file.exists()) {
             return new PlayerData(player);
         }
 
         try (Reader reader = new FileReader(file)) {
             PlayerData data = gson.fromJson(reader, PlayerData.class);
-            data.setPlayer(player); // Restore transient field
             return data;
         } catch (IOException e) {
             e.printStackTrace();
@@ -46,48 +43,9 @@ public class Database {
         }
     }
 
-    public static void updateBankBalance(UUID id, double amountToAdd) {
-        File file = new File(dataDir, id.toString() + ".json");
-        if (!file.exists()) {
-            System.out.println("No player data found for UUID: " + id);
-            return;
-        }
-
-        try (Reader reader = new FileReader(file)) {
-            // Load existing data
-            PlayerData data = gson.fromJson(reader, PlayerData.class);
-
-            // Apply the change to the bank
-            data.getBank().change(amountToAdd);
-
-            // Save back to file
-            try (Writer writer = new FileWriter(file)) {
-                gson.toJson(data, writer);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static boolean hasPlayerData(UUID id) {
         File file = new File(dataDir, id.toString() + ".json");
         return file.exists();
     }
-
-    public static double getBankBalance(UUID id) {
-    File file = new File(dataDir, id.toString() + ".json");
-    if (!file.exists()) {
-        return 0.0; // or throw an error if preferred
-    }
-
-    try (Reader reader = new FileReader(file)) {
-        PlayerData data = gson.fromJson(reader, PlayerData.class);
-        return data.getBank().getBal();
-    } catch (IOException e) {
-        e.printStackTrace();
-        return 0.0;
-    }
-}
 
 }

@@ -7,5 +7,7 @@ net\tfminecraft\DenarEconomy\Managers\MoneyManager.class
 net\tfminecraft\DenarEconomy\Item\Coin.class
 net\tfminecraft\DenarEconomy\Database\Database.class
 net\tfminecraft\DenarEconomy\Loaders\CoinLoader$1.class
+net\tfminecraft\DenarEconomy\Enum\Accounts.class
 net\tfminecraft\DenarEconomy\Loaders\CoinLoader.class
 net\tfminecraft\DenarEconomy\DenarEconomy.class
+net\tfminecraft\DenarEconomy\Managers\MoneyManager$2.class

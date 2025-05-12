@@ -27,4 +27,8 @@ public class Account {
 		BigDecimal change = BigDecimal.valueOf(a);
 		amount = amount.add(change);
 	}
+
+	public boolean isTaxable(){
+		return taxable;
+	}
 }

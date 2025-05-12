@@ -34,7 +34,7 @@ import net.Indyuce.mmoitems.MMOItems;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
 import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
-import net.tfminecraft.DenarEconomy.Database.Database;
+import net.tfminecraft.DenarEconomy.Enum.Accounts;
 import net.tfminecraft.DenarEconomy.Item.Coin;
 import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
 
@@ -85,40 +85,31 @@ public class MoneyManager implements Listener{
 	}
 	
 	public void addMoney(Player p, double amount, boolean silent, boolean taxable) {
-		PlayerData pd = pm.get(p);
-		addMoneyToAccount(p.getUniqueId().toString(), amount, silent, taxable, pd.getPouch());
+		addMoneyToAccount(p.getUniqueId().toString(), amount, silent, taxable, Accounts.POUCH);
 	}
 
-	public void addMoneyToBank(String id, double amount, boolean silent, boolean taxable) {
+	public void changeBal(String id, double amount, Accounts a){
+		PlayerData pd = pm.get(UUID.fromString(id));
+		Account account = null;
+		switch (a) {
+			case POUCH:
+				account = pd.getPouch();
+				break;
+			case BANK:
+				account = pd.getBank();
+				break;
+			default:
+				break;
+		}
+		if(account == null) return;
+		account.change(amount);
 		Player p = Bukkit.getPlayer(UUID.fromString(id));
-		if(p != null && p.isOnline()){
-			PlayerData pd = pm.get(p);
-			addMoneyToAccount(id, amount, silent, taxable, pd.getBank());
-		} else{
-			offlineAddToBank(id, amount, taxable);
+		if(p == null) {
+			pm.save(UUID.fromString(id));
 		}
 	}
 
-	public void offlineAddToBank(String id, double amount, boolean taxable){
-		if(id == null){
-			System.out.println("Error null ID");
-			return;
-		}
-		String name = Bukkit.getOfflinePlayer(UUID.fromString(id)).getName();
-		double tax = 0.0;
-		if(taxable) {
-			tax = doTaxes(name, amount);
-			if(tax > 0) {
-				amount -= tax;
-			}
-			amount = Math.round(amount*100.0)/100.0;
-		}
-		
-		if(amount <= 0) return;
-		Database.updateBankBalance(UUID.fromString(id), amount);
-	}
-
-	public void addMoneyToAccount(String id, double amount, boolean silent, boolean taxable, Account a) {
+	public void addMoneyToAccount(String id, double amount, boolean silent, boolean taxable, Accounts a) {
 		if(id == null){
 			System.out.println("Error null ID");
 			return;
@@ -145,7 +136,7 @@ public class MoneyManager implements Listener{
 		}
 		
 		if(amount <= 0) return;
-		a.change(amount);
+		changeBal(id, amount, a);
 	}
 	
 	public List<ItemStack> amountToItems(double amount) {
