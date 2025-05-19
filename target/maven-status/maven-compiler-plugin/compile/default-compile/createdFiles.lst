@@ -1,13 +1,16 @@
 net\tfminecraft\DenarEconomy\Managers\CommandManager.class
 net\tfminecraft\DenarEconomy\Managers\MoneyManager$1.class
+net\tfminecraft\DenarEconomy\Managers\MoneyManager$3.class
 net\tfminecraft\DenarEconomy\Data\PlayerData.class
 net\tfminecraft\DenarEconomy\Managers\PlayerManager.class
 net\tfminecraft\DenarEconomy\Data\Account.class
 net\tfminecraft\DenarEconomy\Managers\MoneyManager.class
 net\tfminecraft\DenarEconomy\Item\Coin.class
+net\tfminecraft\DenarEconomy\Loaders\DropLoader.class
 net\tfminecraft\DenarEconomy\Database\Database.class
 net\tfminecraft\DenarEconomy\Loaders\CoinLoader$1.class
 net\tfminecraft\DenarEconomy\Enum\Accounts.class
 net\tfminecraft\DenarEconomy\Loaders\CoinLoader.class
 net\tfminecraft\DenarEconomy\DenarEconomy.class
 net\tfminecraft\DenarEconomy\Managers\MoneyManager$2.class
+net\tfminecraft\DenarEconomy\Drop\Drop.class

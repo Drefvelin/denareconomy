@@ -8,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import net.tfminecraft.DenarEconomy.Database.Database;
 import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
+import net.tfminecraft.DenarEconomy.Loaders.DropLoader;
 import net.tfminecraft.DenarEconomy.Managers.CommandManager;
 import net.tfminecraft.DenarEconomy.Managers.MoneyManager;
 import net.tfminecraft.DenarEconomy.Managers.PlayerManager;
@@ -19,6 +20,7 @@ public class DenarEconomy extends JavaPlugin {
 	private final CommandManager commands = new CommandManager();
 	
 	private final CoinLoader coinLoader = new CoinLoader();
+	private final DropLoader dropLoader = new DropLoader();
 	
 	private static final PlayerManager playerManager = new PlayerManager();
 	private static final MoneyManager moneyManager = new MoneyManager();
@@ -43,6 +45,7 @@ public class DenarEconomy extends JavaPlugin {
 	
 	public void loadConfigs() {
 		coinLoader.loadCoins(new File(getDataFolder(), "coins.yml"));
+		dropLoader.load(new File(getDataFolder(), "drops.yml"));
 	}
 	
 	public void registerListeners() {
@@ -58,7 +61,8 @@ public class DenarEconomy extends JavaPlugin {
 	}
 	public void createConfigs() {
 		String[] files = {
-				"coins.yml"
+				"coins.yml",
+				"drops.yml"
 				};
 		for(String s : files) {
 			File newConfigFile = new File(getDataFolder(), s);

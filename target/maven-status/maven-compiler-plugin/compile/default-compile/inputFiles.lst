@@ -2,9 +2,11 @@ D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminec
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Data\PlayerData.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Database\Database.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\DenarEconomy.java
+D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Drop\Drop.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Enum\Accounts.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Item\Coin.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Loaders\CoinLoader.java
+D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Loaders\DropLoader.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Managers\CommandManager.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Managers\MoneyManager.java
 D:\Dokumenter\My Plugins\VSCode Workspace\denareconomy\src\main\java\net\tfminecraft\DenarEconomy\Managers\PlayerManager.java

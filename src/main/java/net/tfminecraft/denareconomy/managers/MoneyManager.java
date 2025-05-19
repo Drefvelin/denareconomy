@@ -7,20 +7,28 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.Ageable;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import me.Plugins.SimpleFactions.Managers.FactionManager;
 import me.Plugins.SimpleFactions.Objects.Faction;
@@ -34,9 +42,11 @@ import net.Indyuce.mmoitems.MMOItems;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
 import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
+import net.tfminecraft.DenarEconomy.Drop.Drop;
 import net.tfminecraft.DenarEconomy.Enum.Accounts;
 import net.tfminecraft.DenarEconomy.Item.Coin;
 import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
+import net.tfminecraft.DenarEconomy.Loaders.DropLoader;
 
 public class MoneyManager implements Listener{
 	private PlayerManager pm = DenarEconomy.getPlayerManager();
@@ -178,30 +188,31 @@ public class MoneyManager implements Listener{
 	}
 
 	
-	public Item spawnMoney(Player p, ItemStack i, boolean silent) {
+	public Item spawnMoney(Player p, Location loc, ItemStack i, boolean silent) {
+		Location spawnLoc = loc;
+		if(p != null) spawnLoc = p.getEyeLocation();
 		if(silent) {
 			ItemMeta m = i.getItemMeta();
 			NamespacedKey key = new NamespacedKey(DenarEconomy.plugin, "silent");
 			m.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, 1);
 			i.setItemMeta(m);
 		}
-		Item item = p.getWorld().dropItem(p.getEyeLocation().clone().add(0, -0.4, 0), i);
-		p.swingMainHand();
-		item.setVelocity(p.getLocation().getDirection().clone().normalize().multiply(0.5));
+		Item item = spawnLoc.getWorld().dropItem(spawnLoc.clone().add(0, -0.4, 0), i);
+		if(p != null) {
+			p.swingMainHand();
+			item.setVelocity(p.getLocation().getDirection().clone().normalize().multiply(0.5));
+		}
 		return item;
 	}
-	
-	public void pay(Player p, double amount) {
-	    PlayerData pd = pm.get(p);
-	    Account pouch = pd.getPouch();
 
-	    if (pouch.getBal() < amount) {
-	        p.sendMessage(StringFormatter.formatHex("#a33d1dNot enough funds in pouch"));
-	        return;
-	    }
-
-	    pouch.change(-amount);
-	    List<ItemStack> items = amountToItems(amount);
+	@SuppressWarnings("unused")
+	public void dropItems(Player p, Location loc, double amount) {
+		final Vector launchVector = new Vector(
+			(Math.random() - 0.5) * 0.2, // small horizontal motion (left/right)
+			0.2 + Math.random() * 0.1,   // slight upward motion
+			(Math.random() - 0.5) * 0.2  // small horizontal motion (forward/back)
+		);
+		List<ItemStack> items = amountToItems(amount);
 	    if (items.isEmpty()) return;
 
 	    boolean[] named = {false}; // Use array to allow modification in inner class
@@ -217,9 +228,11 @@ public class MoneyManager implements Listener{
 	            public void run() {
 	                ItemStack item = original.clone(); // Clone to avoid shared meta issues
 	                ItemMeta m = item.getItemMeta();
-
-	                NamespacedKey senderKey = new NamespacedKey(DenarEconomy.plugin, "sender");
-	                m.getPersistentDataContainer().set(senderKey, PersistentDataType.STRING, p.getUniqueId().toString());
+					if(p != null) {
+						NamespacedKey senderKey = new NamespacedKey(DenarEconomy.plugin, "sender");
+	                	m.getPersistentDataContainer().set(senderKey, PersistentDataType.STRING, p.getUniqueId().toString());
+					}
+	                
 
 	                NamespacedKey valueKey = new NamespacedKey(DenarEconomy.plugin, "customValue");
 
@@ -227,12 +240,13 @@ public class MoneyManager implements Listener{
 	                    named[0] = true;
 	                    m.getPersistentDataContainer().set(valueKey, PersistentDataType.DOUBLE, amount);
 	                    item.setItemMeta(m);
-	                    Item first = spawnMoney(p, item, false);
+	                    Item first = spawnMoney(p, loc, item, false);
+						if(p == null) first.setVelocity(launchVector);
 	                    idHolder[0] = first.getUniqueId();
 	                    firstItemHolder[0] = first.getItemStack();
 	                } else {
 	                    if (idHolder[0] == null) {
-	                        p.sendMessage("Error: First money item not initialized.");
+	                        if(p != null) p.sendMessage("Error: First money item not initialized.");
 	                        return;
 	                    }
 
@@ -241,7 +255,8 @@ public class MoneyManager implements Listener{
 	                    m.getPersistentDataContainer().set(chain, PersistentDataType.STRING, idHolder[0].toString());
 	                    item.setItemMeta(m);
 
-	                    Item newItem = spawnMoney(p, item, true);
+	                    Item newItem = spawnMoney(p, loc, item, true);
+						if(p == null) newItem.setVelocity(launchVector);
 
 	                    if (firstItemHolder[0] != null) {
 	                        ItemMeta firstM = firstItemHolder[0].getItemMeta();
@@ -259,8 +274,65 @@ public class MoneyManager implements Listener{
 	        }.runTaskLater(DenarEconomy.plugin, index);
 	    }
 	}
+	
+	public void pay(Player p, double amount) {
+	    PlayerData pd = pm.get(p);
+	    Account pouch = pd.getPouch();
 
+	    if (pouch.getBal() < amount) {
+	        p.sendMessage(StringFormatter.formatHex("#a33d1dNot enough funds in pouch"));
+	        return;
+	    }
 
+	    pouch.change(-amount);
+	    dropItems(p, null, amount);
+	}
+
+	@EventHandler
+	public void breakBlock(BlockBreakEvent e) {
+		if(e.getPlayer() == null) return;
+		Block b = e.getBlock();
+		Drop drop = DropLoader.getByBlock(b.getType());
+		if(drop == null) return;
+
+		// Check if it's a crop and fully grown
+		BlockData data = b.getBlockData();
+		if (data instanceof Ageable ageable) {
+			if (ageable.getAge() < ageable.getMaximumAge()) {
+				return; // Not fully grown
+			}
+		}
+
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				if(b.getLocation().getBlock().getType().equals(drop.getBlock())) return;
+				if(Math.random() < drop.getChance()) {
+					dropItems(null, b.getLocation().clone().add(0.5, 0.1, 0.5), drop.getAmount());
+				}
+			}
+		}.runTaskLater(DenarEconomy.plugin, 5);
+	}
+
+	@EventHandler
+	public void depositMaterials(PlayerInteractEvent e) {
+		if(!(e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK))) return;
+		Player p = e.getPlayer();
+		ItemStack i = p.getInventory().getItemInMainHand();
+		Coin c = getCoin(i);
+		if(c == null) return;
+		if(c.canWithdraw()) return;
+		if(FactionManager.getByMember(p.getName()) == null) return;
+		Faction f = FactionManager.getByMember(p.getName());
+		if(f.getBank() == null) return;
+		if(!f.getBank().getChunk().equals(p.getLocation().getChunk())) {
+			p.sendMessage("§a[DenarEconomy] §cYou need to be in your faction's bank chunk to deposit materials");
+			return;
+		}
+		addMoneyToAccount(p.getUniqueId().toString(), c.getValue()*i.getAmount(), false, true, Accounts.BANK);
+		p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1f);
+		i.setAmount(0);
+	}
 	
 	@EventHandler
 	public void pickupCoin(EntityPickupItemEvent e) {
@@ -269,6 +341,7 @@ public class MoneyManager implements Listener{
 		ItemStack item = e.getItem().getItemStack();
 		Coin c = getCoin(item);
 		if(c == null) return;
+		if(!c.canWithdraw()) return;
 		e.setCancelled(true);
 		e.getItem().remove();
 		ItemMeta m = item.getItemMeta();
@@ -318,6 +391,7 @@ public class MoneyManager implements Listener{
 		Item i = (Item) e.getEntity();
 		Coin c = getCoin(i.getItemStack());
 		if(c == null) return;
+		if(!c.canWithdraw()) return;
 		ItemStack item = i.getItemStack();
 		ItemMeta m = item.getItemMeta();
 		
