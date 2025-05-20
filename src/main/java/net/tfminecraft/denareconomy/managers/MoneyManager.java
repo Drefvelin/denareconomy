@@ -325,10 +325,7 @@ public class MoneyManager implements Listener{
 		if(FactionManager.getByMember(p.getName()) == null) return;
 		Faction f = FactionManager.getByMember(p.getName());
 		if(f.getBank() == null) return;
-		if(!f.getBank().getChunk().equals(p.getLocation().getChunk())) {
-			p.sendMessage("§a[DenarEconomy] §cYou need to be in your faction's bank chunk to deposit materials");
-			return;
-		}
+		if(!f.getBank().getChunk().equals(p.getLocation().getChunk())) return;
 		addMoneyToAccount(p.getUniqueId().toString(), c.getValue()*i.getAmount(), false, true, Accounts.BANK);
 		p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1f);
 		i.setAmount(0);
