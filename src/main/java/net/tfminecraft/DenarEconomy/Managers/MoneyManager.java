@@ -36,6 +36,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import me.Plugins.SimpleFactions.Managers.FactionManager;
+import me.Plugins.SimpleFactions.Managers.RelationManager;
 import me.Plugins.SimpleFactions.Objects.Faction;
 import me.Plugins.SimpleFactions.Objects.FactionModifier;
 import me.Plugins.SimpleFactions.enums.FactionModifiers;
@@ -168,18 +169,22 @@ public class MoneyManager implements Listener{
 				if(f.getBank() != null) {
 					double tax = f.getTaxRate()/100.0*amount;
 					paidTax += tax;
-					f.getBank().deposit(tax);
+					f.giveTax(tax);
 				}
 			}
 			for(FactionModifier mod : f.getModifiers()) {
 				if(paidTax >= amount) break;
 				if(mod.getFrom() == null) continue;
 				if(!mod.getType().equals(FactionModifiers.TAX)) continue;
-				double tax = mod.getAmount()/100*amount;
+				double tax = mod.getAmount()/100.0*amount;
+				String overlord = RelationManager.getOverlord(f);
+				if(overlord != null && overlord.equalsIgnoreCase(mod.getFrom().getId())) {
+					tax = mod.getFrom().getVassalTaxRate()/100.0*tax;
+				}
 				Faction from = mod.getFrom();
 				if(from.getBank() == null) continue;
 				paidTax += tax;
-				from.getBank().deposit(tax);
+				from.giveTax(tax);
 			}
 		}
 		return Math.round(paidTax*100.0)/100.0;

@@ -51,9 +51,9 @@
         <dependency>
             <groupId>local</groupId>
             <artifactId>simplefactions</artifactId>
-            <version>2.2.5</version>
+            <version>2.2.7</version>
             <scope>system</scope>
-            <systemPath>D:/Dokumenter/My Plugins/TFMC/SimpleFactions/simplefactions_2.2.5.jar</systemPath>
+            <systemPath>D:/Dokumenter/My Plugins/TFMC/SimpleFactions/simplefactions-2.2.7.jar</systemPath>
         </dependency>
     </dependencies>
 
