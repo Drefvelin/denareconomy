@@ -10,3 +10,6 @@ commands:
   deco:
       useage: /<command>
       description: Economy Command
+  pouch:
+      useage: /<command>
+      description: Pouch Command

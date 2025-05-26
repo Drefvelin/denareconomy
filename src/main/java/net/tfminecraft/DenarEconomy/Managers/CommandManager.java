@@ -19,9 +19,15 @@ import net.tfminecraft.DenarEconomy.Data.PlayerData;
 public class CommandManager implements CommandExecutor{
 	
 	public String cmd1 = "deco";
+	public String cmd2 = "pouch";
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		if(cmd.getName().equalsIgnoreCase(cmd2)) {
+			if(!(sender instanceof Player)) return false;
+			Player p = (Player) sender;
+			DenarEconomy.getMoneyManager().showPouch(p);
+		}
 		if(cmd.getName().equalsIgnoreCase(cmd1)) {
 			if(!(sender instanceof Player)) return false;
 			Player p = (Player) sender;

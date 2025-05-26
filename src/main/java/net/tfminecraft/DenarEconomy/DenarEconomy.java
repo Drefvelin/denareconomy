@@ -3,6 +3,7 @@ package net.tfminecraft.DenarEconomy;
 import java.io.File;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -33,6 +34,7 @@ public class DenarEconomy extends JavaPlugin {
 		loadConfigs();
 		registerListeners();
 		getCommand(commands.cmd1).setExecutor(commands);
+		getCommand(commands.cmd2).setExecutor(commands);
 		playerManager.start();
 	}
 
@@ -41,7 +43,17 @@ public class DenarEconomy extends JavaPlugin {
 		for(Player p : Bukkit.getOnlinePlayers()){
 			Database.savePlayerData(playerManager.get(p));
 		}
+		for (ArmorStand stand : moneyManager.getStandMap().values()) {
+			if (stand != null && !stand.isDead()) stand.remove();
+		}
+		moneyManager.getStandMap().clear();
+
+		for (int id : moneyManager.getTaskMap().values()) {
+			Bukkit.getScheduler().cancelTask(id);
+		}
+		moneyManager.getTaskMap().clear();
 	}
+
 	
 	public void loadConfigs() {
 		coinLoader.loadCoins(new File(getDataFolder(), "coins.yml"));

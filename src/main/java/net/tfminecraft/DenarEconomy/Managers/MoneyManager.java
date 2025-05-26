@@ -2,11 +2,13 @@ package net.tfminecraft.DenarEconomy.Managers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -14,6 +16,7 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -24,6 +27,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -50,6 +55,18 @@ import net.tfminecraft.DenarEconomy.Loaders.DropLoader;
 
 public class MoneyManager implements Listener{
 	private PlayerManager pm = DenarEconomy.getPlayerManager();
+
+	private final Map<UUID, ArmorStand> standMap = new HashMap<>();
+	private final Map<UUID, Integer> taskMap = new HashMap<>();
+
+	public Map<UUID, ArmorStand> getStandMap() {
+		return standMap;
+	}
+
+	public Map<UUID, Integer> getTaskMap() {
+		return taskMap;
+	}
+
 	
 	public Coin getCoin(ItemStack i) {
 		ItemAPI api = (ItemAPI) TLibs.getApiInstance(APIType.ITEM_API);
@@ -68,6 +85,80 @@ public class MoneyManager implements Listener{
 		from.change(amount*-1);
 		to.change(amount);
 	}
+
+	public void showPouch(Player p) {
+		UUID uuid = p.getUniqueId();
+
+		// Remove old stand if exists
+		if (standMap.containsKey(uuid)) {
+			ArmorStand old = standMap.remove(uuid);
+			if (old != null && !old.isDead()) old.remove();
+
+			Integer oldTask = taskMap.remove(uuid);
+			if (oldTask != null) Bukkit.getScheduler().cancelTask(oldTask);
+		}
+
+		double a = pm.get(p).getPouch().getBal();
+		double inv = 0;
+
+		for (ItemStack i : p.getInventory().getContents()) {
+			if (i == null || i.getType() == Material.AIR) continue;
+			Coin c = getCoin(i);
+			if (c == null || !c.canWithdraw()) continue;
+			inv += combinedValue(c, i);
+		}
+
+		a += inv;
+		final double amount = a;
+
+		p.sendMessage("§6Showing "+amount+"d...");
+
+		ArmorStand stand = p.getWorld().spawn(p.getLocation().add(0, 2.2, 0), ArmorStand.class, as -> {
+			as.setCustomName(ChatColor.GOLD + "Balance: " + String.format("%.2f", amount) + "d");
+			as.setCustomNameVisible(true);
+			as.setVisible(false);
+			as.setMarker(true);
+			as.setGravity(false);
+			as.setSmall(true);
+		});
+
+		standMap.put(uuid, stand);
+
+		int taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(DenarEconomy.plugin, () -> {
+			if (!p.isOnline() || stand.isDead()) return;
+			stand.teleport(p.getLocation().add(0, 2.2, 0));
+		}, 0L, 2L);
+
+		taskMap.put(uuid, taskId);
+
+		// Cleanup after 5 seconds
+		Bukkit.getScheduler().runTaskLater(DenarEconomy.plugin, () -> {
+			ArmorStand s = standMap.remove(uuid);
+			if (s != null && !s.isDead()) s.remove();
+
+			Integer t = taskMap.remove(uuid);
+			if (t != null) Bukkit.getScheduler().cancelTask(t);
+		}, 20L * 5);
+	}
+	
+	@EventHandler
+	public void onChunkUnload(ChunkUnloadEvent e) {
+		Iterator<Map.Entry<UUID, ArmorStand>> iterator = standMap.entrySet().iterator();
+		while (iterator.hasNext()) {
+			Map.Entry<UUID, ArmorStand> entry = iterator.next();
+			ArmorStand stand = entry.getValue();
+			if (stand != null && stand.getLocation().getChunk().equals(e.getChunk())) {
+				stand.remove(); // remove entity from world
+				iterator.remove(); // remove entry from map
+				Integer taskId = taskMap.remove(entry.getKey());
+				if (taskId != null) Bukkit.getScheduler().cancelTask(taskId);
+			}
+		}
+	}
+
+
+
+
 	
 	public double doTaxes(String p, double amount) {
 		double paidTax = 0;
