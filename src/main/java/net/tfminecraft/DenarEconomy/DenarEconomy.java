@@ -35,6 +35,8 @@ public class DenarEconomy extends JavaPlugin {
 		registerListeners();
 		getCommand(commands.cmd1).setExecutor(commands);
 		getCommand(commands.cmd2).setExecutor(commands);
+		getCommand(commands.cmd1).setTabCompleter(commands);
+		getCommand(commands.cmd2).setTabCompleter(commands);
 		playerManager.start();
 	}
 
