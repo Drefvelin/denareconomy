@@ -26,6 +26,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
@@ -476,6 +477,24 @@ public class MoneyManager implements Listener{
 		}
 		
 		addMoney(p, amount, silent != null, tax);
+	}
+
+	@EventHandler
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		Player victim = event.getEntity();
+		Player killer = victim.getKiller();
+
+		if (killer == null || killer == victim) return; // Not PvP or suicide
+
+		PlayerData pd = pm.get(victim);
+		if (pd == null) return;
+
+		Account pouch = pd.getPouch();
+		double balance = pouch.getBal();
+		if (balance <= 0) return;
+
+		pouch.change(-balance); // Remove from pouch
+		dropItems(null, victim.getLocation(), balance); // Drop money at death location
 	}
 	
 	@EventHandler
