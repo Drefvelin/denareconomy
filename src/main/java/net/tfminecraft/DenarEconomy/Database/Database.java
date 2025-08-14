@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
+import net.tfminecraft.DenarEconomy.Enum.Accounts;
 
 public class Database {
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -46,6 +47,33 @@ public class Database {
     public static boolean hasPlayerData(UUID id) {
         File file = new File(dataDir, id.toString() + ".json");
         return file.exists();
+    }
+
+    public static double getTotalAmount(Accounts account) {
+        if (!dataDir.exists() || !dataDir.isDirectory()) return 0.0;
+
+        double total = 0.0;
+
+        File[] files = dataDir.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files == null) return 0.0;
+
+        for (File file : files) {
+            try (Reader reader = new FileReader(file)) {
+                PlayerData data = gson.fromJson(reader, PlayerData.class);
+                switch (account) {
+                    case POUCH:
+                        total += data.getPouch().getBal();
+                        break;
+                    case BANK:
+                        total += data.getBank().getBal();
+                        break;
+                }
+            } catch (IOException | NullPointerException e) {
+                e.printStackTrace(); // Optional: log which file caused issues
+            }
+        }
+
+        return total;
     }
 
 }

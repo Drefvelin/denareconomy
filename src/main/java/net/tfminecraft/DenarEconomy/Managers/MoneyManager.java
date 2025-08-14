@@ -49,6 +49,7 @@ import net.Indyuce.mmoitems.MMOItems;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
 import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
+import net.tfminecraft.DenarEconomy.Database.Database;
 import net.tfminecraft.DenarEconomy.Drop.Drop;
 import net.tfminecraft.DenarEconomy.Enum.Accounts;
 import net.tfminecraft.DenarEconomy.Item.Coin;
@@ -193,6 +194,10 @@ public class MoneyManager implements Listener{
 	
 	public void addMoney(Player p, double amount, boolean silent, boolean taxable) {
 		addMoneyToAccount(p.getUniqueId().toString(), amount, silent, taxable, Accounts.POUCH);
+	}
+
+	public double getServerBal(Accounts account) {
+		return Database.getTotalAmount(account);
 	}
 
 	public void changeBal(String id, double amount, Accounts a){
