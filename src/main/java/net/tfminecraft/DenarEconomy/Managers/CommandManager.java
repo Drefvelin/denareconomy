@@ -19,6 +19,8 @@ import me.Plugins.TLibs.Utils.ParseUtils;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
 import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
+import net.tfminecraft.DenarEconomy.Database.BalTopEntry;
+import net.tfminecraft.DenarEconomy.Database.Database;
 
 public class CommandManager implements CommandExecutor, TabCompleter {
 
@@ -72,11 +74,30 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 default:
                     sendError(p);
                     break;
+                case "baltop":
+                    handleBalTop(p);
+                    break;
             }
             return true;
         }
         return false;
     }
+
+    private void handleBalTop(Player p) {
+        List<BalTopEntry> topList = Database.getTopBalances(20);
+
+        p.sendMessage("§e========== §6[Balance Top 20] §e==========");
+        int rank = 1;
+        for (BalTopEntry entry : topList) {
+            String name = entry.getName();
+            double total = entry.getTotal();
+            p.sendMessage(StringFormatter.formatHex(
+                String.format("§a%d §e%s §7- #b39122%.2f#dbaf1dd", rank++, name, total)
+            ));
+        }
+        p.sendMessage("§e==================================");
+    }
+
 
     private void handleBalance(Player p) {
         PlayerData pd = DenarEconomy.getPlayerManager().get(p);
@@ -221,6 +242,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 completions.add("toitem");
                 completions.add("deposit");
                 completions.add("withdraw");
+                completions.add("baltop");
             } else if (args.length == 2) {
                 if (args[0].equalsIgnoreCase("pay") || args[0].equalsIgnoreCase("toitem") ||
                     args[0].equalsIgnoreCase("deposit") || args[0].equalsIgnoreCase("withdraw")) {

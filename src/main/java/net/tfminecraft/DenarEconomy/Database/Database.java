@@ -6,7 +6,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+
+import org.bukkit.Bukkit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -76,4 +80,33 @@ public class Database {
         return total;
     }
 
+    public static List<BalTopEntry> getTopBalances(int limit) {
+        List<BalTopEntry> list = new ArrayList<>();
+
+        if (!dataDir.exists() || !dataDir.isDirectory()) return list;
+
+        File[] files = dataDir.listFiles((dir, name) -> name.endsWith(".json"));
+        if (files == null) return list;
+
+        for (File file : files) {
+            try (Reader reader = new FileReader(file)) {
+                PlayerData data = gson.fromJson(reader, PlayerData.class);
+                double total = data.getPouch().getBal() + data.getBank().getBal();
+
+                // Try to get the player name (from file or UUID)
+                String name = Bukkit.getOfflinePlayer(data.getId()).getName();
+                if (name == null) name = data.getId().toString().substring(0, 8); // fallback
+
+                list.add(new BalTopEntry(name, total));
+            } catch (IOException | NullPointerException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Sort descending
+        list.sort((a, b) -> Double.compare(b.getTotal(), a.getTotal()));
+
+        // Return top N
+        return list.size() > limit ? list.subList(0, limit) : list;
+    }
 }
