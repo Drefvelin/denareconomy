@@ -36,11 +36,6 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import me.Plugins.SimpleFactions.Managers.FactionManager;
-import me.Plugins.SimpleFactions.Managers.RelationManager;
-import me.Plugins.SimpleFactions.Objects.Faction;
-import me.Plugins.SimpleFactions.Objects.FactionModifier;
-import me.Plugins.SimpleFactions.enums.FactionModifiers;
 import me.Plugins.TLibs.TLibs;
 import me.Plugins.TLibs.Enums.APIType;
 import me.Plugins.TLibs.Objects.API.ItemAPI;
@@ -55,6 +50,9 @@ import net.tfminecraft.DenarEconomy.Enum.Accounts;
 import net.tfminecraft.DenarEconomy.Item.Coin;
 import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
 import net.tfminecraft.DenarEconomy.Loaders.DropLoader;
+import net.tfminecraft.DenarEconomy.event.PlayerDepositMaterialsEvent;
+import net.tfminecraft.DenarEconomy.event.PlayerBankPulseEvent;
+import net.tfminecraft.DenarEconomy.event.PlayerEarnMoneyEvent;
 
 public class MoneyManager implements Listener{
 	private PlayerManager pm = DenarEconomy.getPlayerManager();
@@ -164,32 +162,9 @@ public class MoneyManager implements Listener{
 
 	
 	public double doTaxes(String p, double amount) {
-		double paidTax = 0;
-		if(FactionManager.getByMember(p) != null) {
-			Faction f = FactionManager.getByMember(p);
-			if(f.getTaxRate() > 0) {
-				if(f.getBank() != null) {
-					double tax = f.getTaxRate()/100.0*amount;
-					paidTax += tax;
-					f.giveTax(tax);
-				}
-			}
-			for(FactionModifier mod : f.getModifiers()) {
-				if(paidTax >= amount) break;
-				if(mod.getFrom() == null) continue;
-				if(!mod.getType().equals(FactionModifiers.TAX)) continue;
-				double tax = mod.getAmount()/100.0*amount;
-				String overlord = RelationManager.getOverlord(f);
-				if(overlord != null && overlord.equalsIgnoreCase(mod.getFrom().getId())) {
-					tax = mod.getFrom().getVassalTaxRate()/100.0*tax;
-				}
-				Faction from = mod.getFrom();
-				if(from.getBank() == null) continue;
-				paidTax += tax;
-				from.giveTax(tax);
-			}
-		}
-		return Math.round(paidTax*100.0)/100.0;
+		PlayerEarnMoneyEvent event = new PlayerEarnMoneyEvent(p, amount);
+		Bukkit.getPluginManager().callEvent(event);
+		return Math.round(event.getAmount()*100.0)/100.0;
 	}
 	
 	public void addMoney(Player p, double amount, boolean silent, boolean taxable) {
@@ -198,6 +173,24 @@ public class MoneyManager implements Listener{
 
 	public double getServerBal(Accounts account) {
 		return Database.getTotalAmount(account);
+	}
+
+	public double getBalance(Accounts account, UUID player) {
+		PlayerData pd = pm.get(player);
+		if(pd == null) return Database.getPlayerBalance(player, account);
+		Account acc = null;
+		switch (account) {
+			case POUCH:
+				acc = pd.getPouch();
+				break;
+			case BANK:
+				acc = pd.getBank();
+				break;
+			default:
+				break;
+		}
+		if(acc == null) return 0.0;
+		return acc.getBal();
 	}
 
 	public void changeBal(String id, double amount, Accounts a){
@@ -421,16 +414,8 @@ public class MoneyManager implements Listener{
 		if(!(e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK))) return;
 		Player p = e.getPlayer();
 		ItemStack i = p.getInventory().getItemInMainHand();
-		Coin c = getCoin(i);
-		if(c == null) return;
-		if(c.canWithdraw()) return;
-		if(FactionManager.getByMember(p.getName()) == null) return;
-		Faction f = FactionManager.getByMember(p.getName());
-		if(f.getBank() == null) return;
-		if(!f.getBank().getChunk().equals(p.getLocation().getChunk())) return;
-		addMoneyToAccount(p.getUniqueId().toString(), c.getValue()*i.getAmount(), false, true, Accounts.BANK);
-		p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1f);
-		i.setAmount(0);
+		PlayerDepositMaterialsEvent event = new PlayerDepositMaterialsEvent(p, i);
+		Bukkit.getPluginManager().callEvent(event);
 	}
 	
 	@EventHandler

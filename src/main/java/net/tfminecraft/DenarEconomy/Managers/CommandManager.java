@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -12,8 +13,6 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import me.Plugins.SimpleFactions.Managers.FactionManager;
-import me.Plugins.SimpleFactions.Objects.Faction;
 import me.Plugins.TLibs.Objects.API.SubAPI.StringFormatter;
 import me.Plugins.TLibs.Utils.ParseUtils;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
@@ -21,6 +20,8 @@ import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
 import net.tfminecraft.DenarEconomy.Database.BalTopEntry;
 import net.tfminecraft.DenarEconomy.Database.Database;
+import net.tfminecraft.DenarEconomy.event.PlayerBankPulseEvent;
+import net.tfminecraft.DenarEconomy.event.PlayerDepositMaterialsEvent;
 
 public class CommandManager implements CommandExecutor, TabCompleter {
 
@@ -153,7 +154,9 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     }
 
     private void handleDeposit(Player p, String[] args) {
-        if (!isInBankChunk(p)) return;
+        PlayerBankPulseEvent event = new PlayerBankPulseEvent(p);
+		Bukkit.getPluginManager().callEvent(event);
+        if(event.isCancelled()) return;
 
         if (args.length < 2) {
             p.sendMessage("§a[DenarEconomy] §cNo amount specified");
@@ -178,7 +181,9 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     }
 
     private void handleWithdraw(Player p, String[] args) {
-        if (!isInBankChunk(p)) return;
+        PlayerBankPulseEvent event = new PlayerBankPulseEvent(p);
+		Bukkit.getPluginManager().callEvent(event);
+        if(event.isCancelled()) return;
 
         if (args.length < 2) {
             p.sendMessage("§a[DenarEconomy] §cNo amount specified");
@@ -200,23 +205,6 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
         MoneyManager.transfer(pd.getBank(), pd.getPouch(), amount);
         sendBankReport(p, "Withdrew", amount, pd);
-    }
-
-    private boolean isInBankChunk(Player p) {
-        Faction f = FactionManager.getByMember(p.getName());
-        if (f == null) {
-            p.sendMessage("§a[DenarEconomy] §cYou must be in a faction");
-            return false;
-        }
-        if (f.getBank() == null) {
-            p.sendMessage("§a[DenarEconomy] §cYour faction has no bank chunk");
-            return false;
-        }
-        if (!f.getBank().getChunk().equals(p.getLocation().getChunk())) {
-            p.sendMessage("§a[DenarEconomy] §cYou must be inside the bank chunk to deposit/withdraw");
-            return false;
-        }
-        return true;
     }
 
     private void sendBankReport(Player p, String action, double amount, PlayerData pd) {

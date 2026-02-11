@@ -48,6 +48,18 @@ public class Database {
         }
     }
 
+    public static double getPlayerBalance(UUID player, Accounts account) {
+        PlayerData data = loadPlayerData(player);
+        switch (account) {
+            case POUCH:
+                return data.getPouch().getBal();
+            case BANK:
+                return data.getBank().getBal();
+            default:
+                return 0.0;
+        }
+    }
+
     public static boolean hasPlayerData(UUID id) {
         File file = new File(dataDir, id.toString() + ".json");
         return file.exists();

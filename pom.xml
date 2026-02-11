@@ -5,7 +5,7 @@
 
     <groupId>net.tfminecraft</groupId>
     <artifactId>denareconomy</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -47,13 +47,6 @@
             <version>1.0</version>
             <scope>system</scope>
             <systemPath>D:/Dokumenter/My Plugins/TFMC/TLibs/TLibs.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>local</groupId>
-            <artifactId>simplefactions</artifactId>
-            <version>2.2.7</version>
-            <scope>system</scope>
-            <systemPath>D:/Dokumenter/My Plugins/TFMC/SimpleFactions/simplefactions-2.2.7.jar</systemPath>
         </dependency>
     </dependencies>
 
