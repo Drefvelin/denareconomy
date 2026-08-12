@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -40,7 +39,6 @@ import org.bukkit.util.Vector;
 import me.Plugins.TLibs.TLibs;
 import me.Plugins.TLibs.Enums.APIType;
 import me.Plugins.TLibs.Objects.API.ItemAPI;
-import me.Plugins.TLibs.Objects.API.SubAPI.StringFormatter;
 import net.Indyuce.mmoitems.MMOItems;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
 import net.tfminecraft.DenarEconomy.Data.Account;
@@ -51,6 +49,7 @@ import net.tfminecraft.DenarEconomy.Enum.Accounts;
 import net.tfminecraft.DenarEconomy.Item.Coin;
 import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
 import net.tfminecraft.DenarEconomy.Loaders.DropLoader;
+import net.tfminecraft.DenarEconomy.Loaders.MessageLoader;
 import net.tfminecraft.DenarEconomy.event.PlayerDepositMaterialsEvent;
 import net.tfminecraft.DenarEconomy.event.PlayerBankPulseEvent;
 import net.tfminecraft.DenarEconomy.event.PlayerEarnMoneyEvent;
@@ -98,7 +97,7 @@ public class MoneyManager implements Listener{
 		Long ready = pouchCooldown.get(uuid);
 		long now = System.currentTimeMillis();
 		if (ready != null && now < ready) {
-			p.sendMessage("§a[DenarEconomy] §cWait " + String.format("%.1f", (ready - now) / 1000.0) + "s before using that again.");
+			MessageLoader.send(p, "errors.pouch-cooldown", "seconds", String.format("%.1f", (ready - now) / 1000.0));
 			return;
 		}
 		pouchCooldown.put(uuid, now + POUCH_COOLDOWN_MILLIS);
@@ -125,10 +124,10 @@ public class MoneyManager implements Listener{
 		a += inv;
 		final double amount = a;
 
-		p.sendMessage("§6Showing "+amount+"d...");
+		MessageLoader.send(p, "pouch.showing", "amount", amount);
 
 		ArmorStand stand = p.getWorld().spawn(p.getLocation().add(0, 2.2, 0), ArmorStand.class, as -> {
-			as.setCustomName(ChatColor.GOLD + "Balance: " + String.format("%.2f", amount) + "d");
+			as.setCustomName(MessageLoader.get("pouch.hologram", "amount", String.format("%.2f", amount)));
 			as.setCustomNameVisible(true);
 			as.setVisible(false);
 			as.setMarker(true);
@@ -266,8 +265,8 @@ public class MoneyManager implements Listener{
 		}
 		
 		if(!silent && p != null) {
-			p.sendMessage(StringFormatter.formatHex("#dbaf1d+#b39122"+amount+"#dbaf1dd"));
-			if(tax > 0) p.sendMessage(StringFormatter.formatHex("#44524f("+tax+" in tax)"));
+			MessageLoader.send(p, "money.earned", "amount", amount);
+			if(tax > 0) MessageLoader.send(p, "money.tax", "tax", tax);
 		}
 		
 		if(amount <= 0) return;
@@ -376,7 +375,7 @@ public class MoneyManager implements Listener{
 	                    firstItemHolder[0] = first.getItemStack();
 	                } else {
 	                    if (idHolder[0] == null) {
-	                        if(p != null) p.sendMessage("Error: First money item not initialized.");
+	                        if(p != null) MessageLoader.send(p, "errors.item-chain-broken");
 	                        return;
 	                    }
 
@@ -410,7 +409,7 @@ public class MoneyManager implements Listener{
 	    Account pouch = pd.getPouch();
 
 	    if (pouch.getBal() < amount) {
-	        p.sendMessage(StringFormatter.formatHex("#a33d1dNot enough funds in pouch"));
+	        MessageLoader.send(p, "errors.not-enough-pouch");
 	        return;
 	    }
 
@@ -537,12 +536,12 @@ public class MoneyManager implements Listener{
 		NamespacedKey key = new NamespacedKey(DenarEconomy.plugin, "customValue");
 		if(m.getPersistentDataContainer().get(key, PersistentDataType.DOUBLE) == null) {
 			i.setCustomNameVisible(true);
-			i.setCustomName(StringFormatter.formatHex("#b39122"+combinedValue(c, i.getItemStack())+"#dbaf1dd"));
+			i.setCustomName(MessageLoader.get("money.coin-name", "amount", combinedValue(c, i.getItemStack())));
 		} else {
 			double amount = m.getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
 			if(amount > 0) {
 				i.setCustomNameVisible(true);
-				i.setCustomName(StringFormatter.formatHex("#b39122"+amount+"#dbaf1dd"));
+				i.setCustomName(MessageLoader.get("money.coin-name", "amount", amount));
 			}
 		}
 		

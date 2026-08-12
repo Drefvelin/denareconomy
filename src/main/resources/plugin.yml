@@ -8,8 +8,8 @@ depend: [MMOItems, MythicLib, TLibs]
 
 commands:
   deco:
-      useage: /<command>
+      usage: /<command>
       description: Economy Command
   pouch:
-      useage: /<command>
+      usage: /<command>
       description: Pouch Command

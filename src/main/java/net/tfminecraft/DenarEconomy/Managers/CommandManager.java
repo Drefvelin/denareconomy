@@ -13,13 +13,13 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import me.Plugins.TLibs.Objects.API.SubAPI.StringFormatter;
 import me.Plugins.TLibs.Utils.ParseUtils;
 import net.tfminecraft.DenarEconomy.DenarEconomy;
 import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
 import net.tfminecraft.DenarEconomy.Database.BalTopEntry;
 import net.tfminecraft.DenarEconomy.Database.Database;
+import net.tfminecraft.DenarEconomy.Loaders.MessageLoader;
 import net.tfminecraft.DenarEconomy.event.PlayerBankPulseEvent;
 import net.tfminecraft.DenarEconomy.event.PlayerDepositMaterialsEvent;
 
@@ -32,7 +32,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Only players can use this command.");
+            MessageLoader.send(sender, "general.players-only");
             return false;
         }
 
@@ -85,37 +85,37 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     }
 
     private void handleBalTop(Player p) {
-        List<BalTopEntry> topList = Database.getTopBalances(20);
+        int limit = 20;
+        List<BalTopEntry> topList = Database.getTopBalances(limit);
 
-        p.sendMessage("§e========== §6[Balance Top 20] §e==========");
+        MessageLoader.send(p, "baltop.header", "limit", limit);
         int rank = 1;
         for (BalTopEntry entry : topList) {
-            String name = entry.getName();
-            double total = entry.getTotal();
-            p.sendMessage(StringFormatter.formatHex(
-                String.format("§a%d §e%s §7- #b39122%.2f#dbaf1dd", rank++, name, total)
-            ));
+            MessageLoader.send(p, "baltop.entry",
+                "rank", rank++,
+                "name", entry.getName(),
+                "amount", String.format("%.2f", entry.getTotal()));
         }
-        p.sendMessage("§e==================================");
+        MessageLoader.send(p, "baltop.footer");
     }
 
 
     private void handleBalance(Player p) {
         PlayerData pd = DenarEconomy.getPlayerManager().get(p);
-        p.sendMessage(StringFormatter.formatHex("#3ce8c9Current Pouch Balance: #b39122" + pd.getPouch().getBal() + "#dbaf1dd"));
-        p.sendMessage(StringFormatter.formatHex("#3ce8c9Current Bank Balance: #b39122" + pd.getBank().getBal() + "#dbaf1dd"));
+        MessageLoader.send(p, "balance.pouch", "amount", pd.getPouch().getBal());
+        MessageLoader.send(p, "balance.bank", "amount", pd.getBank().getBal());
     }
 
     private void handlePay(Player p, String[] args) {
         if (args.length < 2) {
-            p.sendMessage("§a[DenarEconomy] §cNo amount specified");
+            MessageLoader.send(p, "errors.no-amount");
             return;
         }
 
         Double amount = ParseUtils.parseDouble(args[1]);
 
         if (!ParseUtils.isPositive(amount)) {
-            p.sendMessage("§a[DenarEconomy] §cInvalid amount");
+            MessageLoader.send(p, "errors.invalid-amount");
             return;
         }
 
@@ -124,21 +124,21 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
     private void handleToItem(Player p, String[] args) {
         if (args.length < 2) {
-            p.sendMessage("§a[DenarEconomy] §cNo amount specified");
+            MessageLoader.send(p, "errors.no-amount");
             return;
         }
 
         Double amount = ParseUtils.parseDouble(args[1]);
 
         if (!ParseUtils.isPositive(amount)) {
-            p.sendMessage("§a[DenarEconomy] §cInvalid amount");
+            MessageLoader.send(p, "errors.invalid-amount");
             return;
         }
 
         Account pouch = DenarEconomy.getPlayerManager().get(p).getPouch();
 
         if (pouch.getBal() < amount) {
-            p.sendMessage(StringFormatter.formatHex("#a33d1dNot enough funds in pouch"));
+            MessageLoader.send(p, "errors.not-enough-pouch");
             return;
         }
 
@@ -159,25 +159,25 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         if(event.isCancelled()) return;
 
         if (args.length < 2) {
-            p.sendMessage("§a[DenarEconomy] §cNo amount specified");
+            MessageLoader.send(p, "errors.no-amount");
             return;
         }
 
         Double amount = ParseUtils.parseDouble(args[1]);
 
         if (!ParseUtils.isPositive(amount)) {
-            p.sendMessage("§a[DenarEconomy] §cInvalid amount");
+            MessageLoader.send(p, "errors.invalid-amount");
             return;
         }
 
         PlayerData pd = DenarEconomy.getPlayerManager().get(p);
         if (pd.getPouch().getBal() < amount) {
-            p.sendMessage(StringFormatter.formatHex("#a33d1dNot enough funds in pouch"));
+            MessageLoader.send(p, "errors.not-enough-pouch");
             return;
         }
 
         MoneyManager.transfer(pd.getPouch(), pd.getBank(), amount);
-        sendBankReport(p, "Deposited", amount, pd);
+        sendBankReport(p, MessageLoader.get("bank.deposited"), amount, pd);
     }
 
     private void handleWithdraw(Player p, String[] args) {
@@ -186,38 +186,38 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         if(event.isCancelled()) return;
 
         if (args.length < 2) {
-            p.sendMessage("§a[DenarEconomy] §cNo amount specified");
+            MessageLoader.send(p, "errors.no-amount");
             return;
         }
 
         Double amount = ParseUtils.parseDouble(args[1]);
 
         if (!ParseUtils.isPositive(amount)) {
-            p.sendMessage("§a[DenarEconomy] §cInvalid amount");
+            MessageLoader.send(p, "errors.invalid-amount");
             return;
         }
 
         PlayerData pd = DenarEconomy.getPlayerManager().get(p);
         if (pd.getBank().getBal() < amount) {
-            p.sendMessage(StringFormatter.formatHex("#a33d1dNot enough funds in bank"));
+            MessageLoader.send(p, "errors.not-enough-bank");
             return;
         }
 
         MoneyManager.transfer(pd.getBank(), pd.getPouch(), amount);
-        sendBankReport(p, "Withdrew", amount, pd);
+        sendBankReport(p, MessageLoader.get("bank.withdrew"), amount, pd);
     }
 
     private void sendBankReport(Player p, String action, double amount, PlayerData pd) {
-        p.sendMessage("§e============§6[Bank Report]§e==============");
-        p.sendMessage(StringFormatter.formatHex("#6ab05a" + action + ": #b39122" + amount + "#dbaf1dd"));
-        p.sendMessage(StringFormatter.formatHex("#3ce8c9New Bank Balance: #b39122" + pd.getBank().getBal() + "#dbaf1dd"));
-        p.sendMessage(StringFormatter.formatHex("#3ce8c9New Pouch Balance: #b39122" + pd.getPouch().getBal() + "#dbaf1dd"));
-        p.sendMessage("§e=====================================");
+        MessageLoader.send(p, "bank.header");
+        MessageLoader.send(p, "bank.action", "action", action, "amount", amount);
+        MessageLoader.send(p, "bank.new-bank", "amount", pd.getBank().getBal());
+        MessageLoader.send(p, "bank.new-pouch", "amount", pd.getPouch().getBal());
+        MessageLoader.send(p, "bank.footer");
         p.playSound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1f);
     }
 
     private void sendError(Player p) {
-        p.sendMessage("§a[DenarEconomy] §cUnknown subcommand or wrong usage.");
+        MessageLoader.send(p, "general.unknown-subcommand");
     }
 
     @Override
