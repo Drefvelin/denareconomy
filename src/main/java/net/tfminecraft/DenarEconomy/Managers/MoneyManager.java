@@ -30,6 +30,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -412,8 +413,10 @@ public class MoneyManager implements Listener{
 	@EventHandler
 	public void depositMaterials(PlayerInteractEvent e) {
 		if(!(e.getAction().equals(Action.RIGHT_CLICK_AIR) || e.getAction().equals(Action.RIGHT_CLICK_BLOCK))) return;
+		if(e.getHand() != EquipmentSlot.HAND) return;
 		Player p = e.getPlayer();
 		ItemStack i = p.getInventory().getItemInMainHand();
+		if(i == null || i.getType().equals(Material.AIR)) return;
 		PlayerDepositMaterialsEvent event = new PlayerDepositMaterialsEvent(p, i);
 		Bukkit.getPluginManager().callEvent(event);
 	}
