@@ -31,3 +31,5 @@ Thumbs.db
 
 # Logs
 *.log
+# Built plugin jar copied to repo root by antrun
+/*.jar

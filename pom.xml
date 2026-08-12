@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -7,46 +8,68 @@
     <artifactId>denareconomy</artifactId>
     <version>0.1.7</version>
 
+    <name>DenarEconomy</name>
+    <url>tfminecraft.net</url>
+
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>spigotmc</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>phoenix</id>
+            <url>https://nexus.phoenixdevt.fr/repository/maven-public/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
+        <!-- Spigot API -->
         <dependency>
-            <groupId>local</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.10.1</version>
-            <scope>system</scope>
-            <systemPath>D:/Dokumenter/My Plugins/Reference Libs/gson-2.10.1.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>local</groupId>
-            <artifactId>MMOItems</artifactId>
-            <version>6.10</version>
-            <scope>system</scope>
-            <systemPath>D:/Dokumenter/My Plugins/Reference Libs/MMOItems-6.10.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>local</groupId>
-            <artifactId>MythicLib</artifactId>
-            <version>1.6.1</version>
-            <scope>system</scope>
-            <systemPath>D:/Dokumenter/My Plugins/Reference Libs/MythicLib-1.7.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>local</groupId>
+            <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <version>1.20.2-R0.1-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>D:/Dokumenter/My Plugins/Reference Libs/spigot-api-1.20.2-R0.1-SNAPSHOT.jar</systemPath>
+            <scope>provided</scope>
         </dependency>
+
+        <!-- Gson, shipped with the server -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- MMOItems / MythicLib -->
+        <dependency>
+            <groupId>net.Indyuce</groupId>
+            <artifactId>MMOItems-API</artifactId>
+            <version>6.10-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.lumine</groupId>
+            <artifactId>MythicLib-dist</artifactId>
+            <version>1.7.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- TLibs -->
         <dependency>
             <groupId>local</groupId>
             <artifactId>TLibs</artifactId>
             <version>1.0</version>
             <scope>system</scope>
-            <systemPath>D:/Dokumenter/My Plugins/TFMC/TLibs/TLibs.jar</systemPath>
+            <systemPath>${project.basedir}/libs/TLibs.jar</systemPath>
         </dependency>
     </dependencies>
 
@@ -61,8 +84,7 @@
                         <goals><goal>run</goal></goals>
                         <configuration>
                             <target>
-                                <copy file="${project.build.directory}/${project.build.finalName}.jar"
-                                    tofile="D:\Dokumenter\My Plugins\TFMC\DenarEconomy\${project.build.finalName}.jar"/>
+                                <copy file="${project.build.directory}/${project.build.finalName}.jar" tofile="${project.basedir}/${project.build.finalName}.jar"/>
                             </target>
                         </configuration>
                     </execution>
