@@ -60,6 +60,10 @@ public class MoneyManager implements Listener{
 
 	private final Map<UUID, ArmorStand> standMap = new HashMap<>();
 	private final Map<UUID, Integer> taskMap = new HashMap<>();
+	private final Map<UUID, Long> pouchCooldown = new HashMap<>();
+
+	private static final long POUCH_COOLDOWN_MILLIS = 5000L;
+	private static final long POUCH_DISPLAY_TICKS = 20L * 5;
 
 	public Map<UUID, ArmorStand> getStandMap() {
 		return standMap;
@@ -90,6 +94,14 @@ public class MoneyManager implements Listener{
 
 	public void showPouch(Player p) {
 		UUID uuid = p.getUniqueId();
+
+		Long ready = pouchCooldown.get(uuid);
+		long now = System.currentTimeMillis();
+		if (ready != null && now < ready) {
+			p.sendMessage("§a[DenarEconomy] §cWait " + String.format("%.1f", (ready - now) / 1000.0) + "s before using that again.");
+			return;
+		}
+		pouchCooldown.put(uuid, now + POUCH_COOLDOWN_MILLIS);
 
 		// Remove old stand if exists
 		if (standMap.containsKey(uuid)) {
@@ -122,6 +134,7 @@ public class MoneyManager implements Listener{
 			as.setMarker(true);
 			as.setGravity(false);
 			as.setSmall(true);
+			as.setPersistent(false); // never written to the world save, so a crash cannot orphan it
 		});
 
 		standMap.put(uuid, stand);
@@ -135,14 +148,30 @@ public class MoneyManager implements Listener{
 
 		// Cleanup after 5 seconds
 		Bukkit.getScheduler().runTaskLater(DenarEconomy.plugin, () -> {
-			ArmorStand s = standMap.remove(uuid);
-			if (s != null && !s.isDead()) s.remove();
+			// only clear the entry if it is still the stand this call spawned
+			if (standMap.get(uuid) == stand) {
+				standMap.remove(uuid);
 
-			Integer t = taskMap.remove(uuid);
-			if (t != null) Bukkit.getScheduler().cancelTask(t);
-		}, 20L * 5);
+				Integer t = taskMap.remove(uuid);
+				if (t != null) Bukkit.getScheduler().cancelTask(t);
+			}
+			if (!stand.isDead()) stand.remove();
+		}, POUCH_DISPLAY_TICKS);
 	}
 	
+	@EventHandler
+	public void onQuitClearStand(PlayerQuitEvent e) {
+		UUID uuid = e.getPlayer().getUniqueId();
+
+		ArmorStand stand = standMap.remove(uuid);
+		if (stand != null && !stand.isDead()) stand.remove();
+
+		Integer taskId = taskMap.remove(uuid);
+		if (taskId != null) Bukkit.getScheduler().cancelTask(taskId);
+
+		pouchCooldown.remove(uuid);
+	}
+
 	@EventHandler
 	public void onChunkUnload(ChunkUnloadEvent e) {
 		Iterator<Map.Entry<UUID, ArmorStand>> iterator = standMap.entrySet().iterator();
