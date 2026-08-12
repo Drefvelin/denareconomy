@@ -1,10 +1,10 @@
 main: net.tfminecraft.DenarEconomy.DenarEconomy
 api-version: 1.20
 name: DenarEconomy
-version: 0.1.1
+version: ${project.version}
 author: Drefvelin
 
-depend: [MMOCore, MMOItems, MythicLib]
+depend: [MMOItems, MythicLib, TLibs]
 
 commands:
   deco:
