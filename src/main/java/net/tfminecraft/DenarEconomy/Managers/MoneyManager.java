@@ -512,6 +512,11 @@ public class MoneyManager implements Listener{
 
 		if (killer == null || killer == victim) return; // Not PvP or suicide
 
+		boolean keepPouch = victim.hasMetadata(PouchDeathPolicy.KEEP_POUCH_METADATA);
+		if (!PouchDeathPolicy.shouldDropPouch(event.getKeepInventory(), keepPouch)) {
+			return;
+		}
+
 		PlayerData pd = pm.get(victim);
 		if (pd == null) return;
 
