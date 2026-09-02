@@ -274,27 +274,33 @@ public class MoneyManager implements Listener{
 	}
 	
 	public List<ItemStack> amountToItems(double amount) {
-	    Map<String, Long> itemCounts = new HashMap<>();
+		return amountToItems(amount, 0.0, 0.0);
+	}
 
-	    // Work in whole cents.
-		// Repeated double subtraction accumulated drift and exited a denomination one coin early on roughly half of all amounts. (48.5%) always a 0.01 error
-	    long remaining = Math.round(amount * 100.0);
+	/**
+	 * Coins for this amount, using nothing bigger than maxUnitValue. Pass 0 for no cap.
+	 * Used to make change: a 100 pouch is worth nothing to someone who has to pay 50.
+	 */
+	public List<ItemStack> amountToItems(double amount, double maxUnitValue) {
+		return amountToItems(amount, maxUnitValue, 0.0);
+	}
 
-	    for (Coin c : CoinLoader.getSortedCoins()) {
-	        if (!c.canWithdraw()) continue;
-	        if (remaining <= 0) break;
+	/**
+	 * Coins for this amount, using nothing bigger than maxUnitValue and nothing smaller than
+	 * minUnitValue. Pass 0 for either to leave it uncapped. When the smallest allowed coin cannot
+	 * finish the amount exactly, this returns an empty list rather than short change.
+	 */
+	public List<ItemStack> amountToItems(double amount, double maxUnitValue, double minUnitValue) {
+	    Map<String, Long> itemCounts = CoinChange.plan(denominations(),
+	            Math.round(amount * 100.0),
+	            maxUnitValue > 0 ? Math.round(maxUnitValue * 100.0) : CoinChange.NO_LIMIT,
+	            minUnitValue > 0 ? Math.round(minUnitValue * 100.0) : CoinChange.NO_LIMIT);
+	    if (itemCounts == null) return new ArrayList<>();
+	    return items(itemCounts);
+	}
 
-	        long value = Math.round(c.getValue() * 100.0);
-	        if (value <= 0) continue;
-
-	        long count = remaining / value;
-	        remaining -= count * value;
-
-	        if (count > 0) {
-	            itemCounts.put(c.getItem(), itemCounts.getOrDefault(c.getItem(), 0L) + count);
-	        }
-	    }
-
+	/** Turn a plan of item id to count into real stacks. */
+	private List<ItemStack> items(Map<String, Long> itemCounts) {
 	    List<ItemStack> items = new ArrayList<>();
 	    for (Map.Entry<String, Long> entry : itemCounts.entrySet()) {
 	        String[] parts = entry.getKey().split("\\.");
@@ -317,6 +323,40 @@ public class MoneyManager implements Listener{
 	}
 
 	
+	/**
+	 * Smaller coins worth the same as one of these, or an empty list when that cannot be done.
+	 *
+	 * <p>For making change: someone holding a single 100 pouch cannot pay 50 with it, but they can
+	 * pay with what it breaks into. The result is strictly smaller denominations that add up to the
+	 * same value, so nothing is created or destroyed. Coins marked withdraw: false are never
+	 * produced, and minUnitValue stops a break going below a size that is any use.
+	 */
+	public List<ItemStack> breakCoin(ItemStack stack, double minUnitValue) {
+		if (stack == null || stack.getAmount() < 1) return new ArrayList<>();
+		Coin coin = getCoin(stack);
+		if (coin == null || coin.getValue() == null) return new ArrayList<>();
+
+		long want = Math.round(coin.getValue() * 100.0);
+		long min = minUnitValue > 0 ? Math.round(minUnitValue * 100.0) : CoinChange.NO_LIMIT;
+		List<CoinChange.Denom> denominations = denominations();
+		Map<String, Long> counts = CoinChange.breakInto(denominations, want, min);
+		if (counts == null) return new ArrayList<>();
+		// Belt and braces: change that does not add up is worse than no change at all.
+		if (CoinChange.value(denominations, counts) != want) return new ArrayList<>();
+
+		return items(counts);
+	}
+
+	/** The configured denominations in descending value order, in cents. */
+	private List<CoinChange.Denom> denominations() {
+		List<CoinChange.Denom> out = new ArrayList<>();
+		for (Coin c : CoinLoader.getSortedCoins()) {
+			if (c.getValue() == null) continue;
+			out.add(new CoinChange.Denom(c.getItem(), Math.round(c.getValue() * 100.0), c.canWithdraw()));
+		}
+		return out;
+	}
+
 	public Item spawnMoney(Player p, Location loc, ItemStack i, boolean silent) {
 		Location spawnLoc = loc;
 		if(p != null) spawnLoc = p.getEyeLocation();
