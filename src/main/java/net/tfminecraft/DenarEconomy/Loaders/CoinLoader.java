@@ -35,7 +35,17 @@ public class CoinLoader {
 		}
 		return null;
 	}
+	public static Coin getWithdrawableByValue(double value) {
+		long cents = Math.round(value * 100.0);
+		for (Coin c : coins) {
+			if (!c.canWithdraw() || c.getValue() == null) continue;
+			if (Math.round(c.getValue() * 100.0) == cents) return c;
+		}
+		return null;
+	}
+
 	public void loadCoins(File configFile) {
+		coins.clear();
 		FileConfiguration config = new YamlConfiguration();
         try {
         	config.load(configFile);

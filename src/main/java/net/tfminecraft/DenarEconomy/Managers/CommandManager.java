@@ -19,6 +19,8 @@ import net.tfminecraft.DenarEconomy.Data.Account;
 import net.tfminecraft.DenarEconomy.Data.PlayerData;
 import net.tfminecraft.DenarEconomy.Database.BalTopEntry;
 import net.tfminecraft.DenarEconomy.Database.Database;
+import net.tfminecraft.DenarEconomy.Item.Coin;
+import net.tfminecraft.DenarEconomy.Loaders.CoinLoader;
 import net.tfminecraft.DenarEconomy.Loaders.MessageLoader;
 import net.tfminecraft.DenarEconomy.event.PlayerBankPulseEvent;
 import net.tfminecraft.DenarEconomy.event.PlayerDepositMaterialsEvent;
@@ -31,6 +33,12 @@ public class CommandManager implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (cmd.getName().equalsIgnoreCase(cmd1) && args.length > 0
+                && args[0].equalsIgnoreCase("reload")) {
+            handleReload(sender);
+            return true;
+        }
+
         if (!(sender instanceof Player)) {
             MessageLoader.send(sender, "general.players-only");
             return false;
@@ -49,39 +57,49 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 return false;
             }
 
-            String sub = args[0].toLowerCase();
-
-            switch (sub) {
+            switch (args[0].toLowerCase()) {
                 case "bal":
                     handleBalance(p);
                     break;
-
                 case "pay":
                     handlePay(p, args);
                     break;
-
                 case "toitem":
                     handleToItem(p, args);
                     break;
-
                 case "deposit":
                     handleDeposit(p, args);
                     break;
-
                 case "withdraw":
                     handleWithdraw(p, args);
                     break;
-
-                default:
-                    sendError(p);
-                    break;
                 case "baltop":
                     handleBalTop(p);
+                    break;
+                default:
+                    sendError(p);
                     break;
             }
             return true;
         }
         return false;
+    }
+
+    private void handleReload(CommandSender sender) {
+        if (!canReload(sender)) {
+            MessageLoader.send(sender, "errors.no-permission");
+            return;
+        }
+        DenarEconomy.plugin.loadConfigs();
+        MessageLoader.send(sender, "general.reload-ok");
+    }
+
+    private static boolean canReload(CommandSender sender) {
+        if (!(sender instanceof Player)) {
+            return true;
+        }
+        Player player = (Player) sender;
+        return player.isOp() || player.hasPermission("denareconomy.reload");
     }
 
     private void handleBalTop(Player p) {
@@ -136,14 +154,49 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         }
 
         Account pouch = DenarEconomy.getPlayerManager().get(p).getPouch();
+        List<ItemStack> items;
+        double cost;
 
-        if (pouch.getBal() < amount) {
+        if (args.length >= 3) {
+            Coin coin = resolveToItemCoin(args[2]);
+            if (coin == null) {
+                MessageLoader.send(p, "errors.unknown-coin");
+                return;
+            }
+            if (amount != Math.floor(amount)) {
+                MessageLoader.send(p, "errors.invalid-count");
+                return;
+            }
+            long count = Math.round(amount);
+            cost = count * coin.getValue();
+            items = DenarEconomy.getMoneyManager().coinItems(coin, count);
+        } else {
+            cost = amount;
+            items = DenarEconomy.getMoneyManager().amountToItems(amount);
+        }
+
+        if (pouch.getBal() < cost) {
             MessageLoader.send(p, "errors.not-enough-pouch");
             return;
         }
 
-        pouch.change(-amount);
-        List<ItemStack> items = DenarEconomy.getMoneyManager().amountToItems(amount);
+        pouch.change(-cost);
+        giveItems(p, items);
+    }
+
+    private static Coin resolveToItemCoin(String token) {
+        Coin byId = CoinLoader.getByString(token);
+        if (byId != null) {
+            return byId.canWithdraw() ? byId : null;
+        }
+        Double value = ParseUtils.parseDouble(token);
+        if (!ParseUtils.isPositive(value)) {
+            return null;
+        }
+        return CoinLoader.getWithdrawableByValue(value);
+    }
+
+    private static void giveItems(Player p, List<ItemStack> items) {
         for (ItemStack i : items) {
             if (p.getInventory().firstEmpty() == -1) {
                 p.getWorld().dropItem(p.getLocation(), i);
@@ -231,10 +284,19 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 completions.add("deposit");
                 completions.add("withdraw");
                 completions.add("baltop");
+                if (canReload(sender)) {
+                    completions.add("reload");
+                }
             } else if (args.length == 2) {
                 if (args[0].equalsIgnoreCase("pay") || args[0].equalsIgnoreCase("toitem") ||
                     args[0].equalsIgnoreCase("deposit") || args[0].equalsIgnoreCase("withdraw")) {
                     completions.add("<amount>");
+                }
+            } else if (args.length == 3 && args[0].equalsIgnoreCase("toitem")) {
+                for (Coin coin : CoinLoader.get()) {
+                    if (coin.canWithdraw()) {
+                        completions.add(coin.getId());
+                    }
                 }
             }
         } else if (cmd.getName().equalsIgnoreCase(cmd2)) {

@@ -24,6 +24,7 @@ public class DropLoader {
 		return drops.get(id);
 	}
 	public void load(File configFile) {
+		drops.clear();
 		FileConfiguration config = new YamlConfiguration();
         try {
         	config.load(configFile);

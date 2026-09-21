@@ -299,6 +299,14 @@ public class MoneyManager implements Listener{
 	    return items(itemCounts);
 	}
 
+	/** Count stacks of one coin, same construction as amountToItems. */
+	public List<ItemStack> coinItems(Coin coin, long count) {
+		if (coin == null || coin.getItem() == null || count < 1) {
+			return new ArrayList<>();
+		}
+		return items(Map.of(coin.getItem(), count));
+	}
+
 	/** Turn a plan of item id to count into real stacks. */
 	private List<ItemStack> items(Map<String, Long> itemCounts) {
 	    List<ItemStack> items = new ArrayList<>();

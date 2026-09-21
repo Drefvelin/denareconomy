@@ -7,6 +7,7 @@ prefix: "&a[DenarEconomy] "
 general:
   players-only: "Only players can use this command."
   unknown-subcommand: "%prefix%&cUnknown subcommand or wrong usage."
+  reload-ok: "%prefix%&aReloaded coins, drops, and messages."
 
 errors:
   no-amount: "%prefix%&cNo amount specified"
@@ -15,6 +16,9 @@ errors:
   not-enough-bank: "#a33d1dNot enough funds in bank"
   pouch-cooldown: "%prefix%&cWait %seconds%s before using that again."
   item-chain-broken: "Error: First money item not initialized."
+  no-permission: "%prefix%&cYou do not have permission to do that."
+  unknown-coin: "%prefix%&cUnknown coin."
+  invalid-count: "%prefix%&cAmount must be a whole number of coins."
 
 balance:
   pouch: "#3ce8c9Current Pouch Balance: #b39122%amount%#dbaf1dd"

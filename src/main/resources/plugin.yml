@@ -13,3 +13,8 @@ commands:
   pouch:
       usage: /<command>
       description: Pouch Command
+
+permissions:
+  denareconomy.reload:
+    description: Reload DenarEconomy configs
+    default: op
