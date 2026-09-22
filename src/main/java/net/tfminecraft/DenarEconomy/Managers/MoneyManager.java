@@ -15,6 +15,7 @@ import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -480,11 +481,20 @@ public class MoneyManager implements Listener{
 			}
 		}
 
+		ItemStack tool = e.getPlayer().getInventory().getItemInMainHand();
+		double chance = drop.getChance();
+		if (tool != null && tool.containsEnchantment(Enchantment.FORTUNE)) {
+			int fortuneLevel = tool.getEnchantmentLevel(Enchantment.FORTUNE);
+			double rolls = 1 + fortuneLevel * DropLoader.fortuneStrength;
+			chance = 1 - Math.pow(1 - chance, rolls);
+		}
+		final double rollChance = chance;
+
 		new BukkitRunnable() {
 			@Override
 			public void run() {
 				if(b.getLocation().getBlock().getType().equals(drop.getBlock())) return;
-				if(Math.random() < drop.getChance()) {
+				if(Math.random() < rollChance) {
 					dropItems(null, b.getLocation().clone().add(0.5, 0.1, 0.5), drop.getAmount());
 				}
 			}

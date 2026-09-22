@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -16,6 +17,7 @@ import net.tfminecraft.DenarEconomy.Drop.Drop;
 
 public class DropLoader {
 	public static HashMap<Material, Drop> drops = new HashMap<>();
+	public static double fortuneStrength = 0.33;
 	public static HashMap<Material, Drop> get(){
 		return drops;
 	}
@@ -25,6 +27,7 @@ public class DropLoader {
 	}
 	public void load(File configFile) {
 		drops.clear();
+		fortuneStrength = 0.33;
 		FileConfiguration config = new YamlConfiguration();
         try {
         	config.load(configFile);
@@ -35,8 +38,12 @@ public class DropLoader {
 
 		List<String> list = new ArrayList<String>(set);
 		
+		fortuneStrength = config.getDouble("fortune-strength", 0.33);
 		for(String key : list) {
-			Drop c = new Drop(key, config.getConfigurationSection(key));
+			if(key.equalsIgnoreCase("fortune-strength")) continue;
+			ConfigurationSection section = config.getConfigurationSection(key);
+			if(section == null) continue;
+			Drop c = new Drop(key, section);
 			drops.put(c.getBlock(), c);
 		}
 	}
